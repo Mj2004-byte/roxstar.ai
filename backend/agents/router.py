@@ -82,7 +82,21 @@ class BotRouter:
                 reason="Explicitly addressed AI Sathi"
             )
 
-        # Rule 3: Check relevance (Filter out human-to-human casual chat)
+        # Rule 3: Check greetings
+        GREETING_KEYWORDS = ["hi", "hello", "hlo", "hey", "namaste", "ssup", "kaise ho", "kya haal hai"]
+        is_greeting = any(g == lower_text or lower_text.startswith(g + " ") or lower_text.endswith(" " + g) for g in GREETING_KEYWORDS)
+
+        if is_greeting:
+            next_bot = self.BOT_SATHI_ID if self._last_selected_bot == self.BOT_DOST_ID else self.BOT_DOST_ID
+            self._last_selected_bot = next_bot
+            return RouteDecision(
+                selected_bots=[next_bot],
+                is_explicit=False,
+                is_sequential=False,
+                reason="Room greeting - auto-routed to active bot"
+            )
+
+        # Rule 4: Check relevance (Filter out human-to-human casual chat)
         # e.g., "Kal cricket match dekha?" -> bots should remain silent
         is_casual = any(trigger in lower_text for trigger in self.CASUAL_CHATTER_TRIGGERS)
         is_relevant = any(kw in lower_text for kw in self.RELEVANCE_KEYWORDS)

@@ -93,13 +93,11 @@ async def get_token(req: TokenRequest):
             is_agent=req.is_agent
         )
         
-        # Ensure room context is initialized
+        # Ensure room context is initialized and participant is added
         context, _, _ = get_or_create_room_components(req.room_name)
-        if req.fresh_session and not req.is_agent:
-            context.reset_conversation()
 
         if not req.is_agent:
-            context.add_participant(req.participant_identity, req.participant_name or req.participant_identity)
+            context.add_participant(req.participant_identity, req.participant_name or req.participant_identity, role="human")
 
         return {
             "token": token,
