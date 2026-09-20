@@ -46,3 +46,14 @@ export async function fetchRoomState(roomId: string) {
   }
   return response.json();
 }
+
+export async function resetRoomState(roomId: string) {
+  const response = await fetch(`${BACKEND_URL}/api/room/${roomId}/reset`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to reset room state: ${response.statusText}`);
+  }
+  return response.json();
+}

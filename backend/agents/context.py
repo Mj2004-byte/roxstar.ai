@@ -41,6 +41,14 @@ class RoomContext:
         if participant_id in self.participants:
             del self.participants[participant_id]
 
+    def reset_conversation(self):
+        """Clears conversation history and resets active turn state for a fresh session."""
+        self.conversation_history.clear()
+        self.active_bot = None
+        self.last_user = None
+        self.last_bot = None
+        self.timestamps["last_activity"] = time.time()
+
     def add_message(self, speaker_id: str, speaker_name: str, speaker_role: str, text: str) -> MessageTurn:
         msg_id = f"msg_{len(self.conversation_history) + 1}_{int(time.time())}"
         turn = MessageTurn(

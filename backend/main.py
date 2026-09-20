@@ -60,6 +60,7 @@ class TokenRequest(BaseModel):
     participant_identity: str
     participant_name: Optional[str] = None
     is_agent: bool = False
+    fresh_session: bool = True
 
 class ChatRequest(BaseModel):
     room_id: str
@@ -94,6 +95,9 @@ async def get_token(req: TokenRequest):
         
         # Ensure room context is initialized
         context, _, _ = get_or_create_room_components(req.room_name)
+        if req.fresh_session and not req.is_agent:
+            context.reset_conversation()
+
         if not req.is_agent:
             context.add_participant(req.participant_identity, req.participant_name or req.participant_identity)
 
@@ -106,6 +110,15 @@ async def get_token(req: TokenRequest):
     except Exception as e:
         logger.error(f"Error generating token: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/room/{room_id}/reset")
+async def reset_room(room_id: str):
+    """Resets chat history for a fresh room session."""
+    context, turn_mgr, _ = get_or_create_room_components(room_id)
+    context.reset_conversation()
+    await turn_mgr.update_state("IDLE", None)
+    logger.info(f"Room {room_id} conversation reset for fresh session.")
+    return {"status": "success", "room_id": room_id}
 
 @app.post("/api/chat")
 async def process_chat(req: ChatRequest):

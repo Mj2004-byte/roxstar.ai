@@ -48,10 +48,14 @@ export const ParticipantsPanel: React.FC<ParticipantsPanelProps> = ({ participan
 
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold text-slate-100 text-sm">{p.name}</span>
-                    {isBot && (
+                    <span className="font-bold text-slate-100 text-sm">{p.name}</span>
+                    {isBot ? (
                       <span className="bg-pink-500/20 text-pink-300 text-[10px] px-1.5 py-0.2 rounded uppercase font-bold tracking-wider border border-pink-500/30">
                         AI BOT
+                      </span>
+                    ) : (
+                      <span className="bg-emerald-500/20 text-emerald-300 text-[10px] px-1.5 py-0.2 rounded uppercase font-bold tracking-wider border border-emerald-500/30">
+                        Participant
                       </span>
                     )}
                   </div>

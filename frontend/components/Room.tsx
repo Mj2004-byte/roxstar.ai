@@ -7,7 +7,7 @@ import { ControlBar } from './ControlBar';
 import { MetricsOverlay } from './MetricsOverlay';
 import { AudioVisualizer } from './AudioVisualizer';
 import { Logo } from './Logo';
-import { sendChatMessage, fetchRoomState } from '../lib/livekit';
+import { sendChatMessage, fetchRoomState, resetRoomState } from '../lib/livekit';
 
 interface RoomProps {
   roomId: string;
@@ -130,16 +130,44 @@ export const Room: React.FC<RoomProps> = ({ roomId, userIdentity, userName, onLe
     }
   };
 
+  const handleLeaveRoom = async () => {
+    try {
+      await resetRoomState(roomId);
+    } catch (e) {}
+    onLeave();
+  };
+
+  const handleResetChat = async () => {
+    try {
+      await resetRoomState(roomId);
+      setMessages([]);
+    } catch (e) {}
+  };
+
   return (
     <div className="flex flex-col h-screen max-h-screen bg-[#0e0b16] text-white p-4 gap-4 font-sans overflow-hidden">
-      {/* Header Bar with Logo */}
+      {/* Header Bar with Logo and Prominent Participant Name */}
       <header className="flex items-center justify-between bg-[#160d2b]/90 border border-pink-500/20 rounded-2xl px-5 py-3 shadow-xl shrink-0">
         <Logo size="md" />
 
-        <div className="hidden sm:flex items-center gap-2">
-          <span className="text-xs text-pink-300 font-mono">
+        <div className="flex items-center gap-3">
+          <div className="bg-gradient-to-r from-pink-500/20 to-purple-500/20 border border-pink-500/40 rounded-xl px-3.5 py-1.5 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-pink-400 animate-pulse" />
+            <span className="text-xs text-pink-200 font-medium">Participant:</span>
+            <span className="text-sm font-black text-white tracking-wide">{userName}</span>
+          </div>
+
+          <span className="hidden md:inline text-xs text-pink-300/80 font-mono bg-purple-950/60 px-3 py-1 rounded-lg border border-purple-800/40">
             Room: <strong className="text-white">{roomId}</strong>
           </span>
+
+          <button
+            onClick={handleResetChat}
+            title="Clear Chat & Start Fresh Session"
+            className="text-xs text-pink-300 hover:text-white bg-pink-500/10 hover:bg-pink-500/20 border border-pink-500/30 px-3 py-1.5 rounded-xl font-mono font-medium transition-all"
+          >
+            Clear Session
+          </button>
         </div>
 
         <MetricsOverlay metrics={metrics} connectionState={connectionState} />
@@ -174,7 +202,7 @@ export const Room: React.FC<RoomProps> = ({ roomId, userIdentity, userName, onLe
               onToggleMute={() => setIsMuted(!isMuted)}
               isSpeakerOn={isSpeakerOn}
               onToggleSpeaker={() => setIsSpeakerOn(!isSpeakerOn)}
-              onLeaveRoom={onLeave}
+              onLeaveRoom={handleLeaveRoom}
             />
           </div>
         </div>
