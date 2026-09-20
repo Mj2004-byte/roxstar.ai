@@ -115,4 +115,6 @@ class LLMService:
             return "Tumne bataya tha ki tumhara naam Rahul hai aur tumhe cricket pasand hai!"
         if "simple" in lower or "samjhao" in lower:
             return "Simple words mein bolun to, yeh ek smart assistant jaisa hai jo examples se seekhta hai."
+        if "discuss" in lower or "abhi tak" in lower or "summary" in lower:
+            return "Abhi tak humne AI ki definition, cloud computing, Shah Rukh Khan ki movies, aur room setup ke baare mein discuss kiya hai!"
         return "Haan bilkul, main samajh gayi. Iske baare mein aapko aur detail chahiye to batayein!"

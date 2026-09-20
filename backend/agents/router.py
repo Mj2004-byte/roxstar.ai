@@ -19,7 +19,8 @@ class BotRouter:
         "ai", "artificial intelligence", "technology", "tech", "cloud", "computing", "server",
         "machine learning", "ml", "python", "code", "programming", "software", "network",
         "system", "batao", "samjhao", "kaise", "kya", "example", "help", "who", "what", "how",
-        "meaning", "matlab", "shukriya", "thanks", "hello", "hi", "namaste", "pehle", "baad"
+        "meaning", "matlab", "shukriya", "thanks", "hello", "hi", "namaste", "pehle", "baad",
+        "discuss", "summary", "abhi tak", "kya baat", "revision"
     ]
 
     # Non-AI casual chatter triggers that bots should ignore unless addressed
