@@ -19,14 +19,14 @@ This repository is pre-configured to deploy seamlessly to **Vercel** with Next.j
 
    | Variable | Value | Description |
    | :--- | :--- | :--- |
-   | `LIVEKIT_URL` | `wss://your-project.livekit.cloud` | Your LiveKit Cloud URL |
-   | `LIVEKIT_API_KEY` | `your_livekit_api_key` | LiveKit API Key |
-   | `LIVEKIT_API_SECRET` | `your_livekit_api_secret` | LiveKit API Secret |
-   | `OPENAI_API_KEY` | `sk-...` | OpenAI API Key for LLM |
+   | `LIVEKIT_URL` | `wss://roxstar-2fccfuti.livekit.cloud` | Your LiveKit Cloud WebSockets URL |
+   | `LIVEKIT_API_KEY` | `APISxNhwyiErW9Z` | LiveKit API Key |
+   | `LIVEKIT_API_SECRET` | `your_livekit_api_secret` | LiveKit Secret Key |
+   | `GROQ_API_KEY` | `gsk_aiyUQq7q...` | Groq API Key for fast LLM |
+   | `LLM_PROVIDER` | `groq` | LLM Provider |
+   | `LLM_MODEL` | `groq/compound-mini` | Groq Model ID |
    | `STT_API_KEY` | `your_deepgram_key` | Deepgram STT API Key (optional) |
    | `TTS_API_KEY` | `your_elevenlabs_key` | ElevenLabs TTS API Key (optional) |
-   | `TTS_MALE_VOICE_ID` | `voice_id_dost` | Male Voice ID for Dost |
-   | `TTS_FEMALE_VOICE_ID` | `voice_id_sathi` | Female Voice ID for Sathi |
 
 4. **Click Deploy**:
    Vercel will build the Next.js app and Python API serverless functions into a single live production URL!
