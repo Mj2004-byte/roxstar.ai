@@ -1,0 +1,12 @@
+flowchart TD
+    In[Input Message] --> Explicit{Mentions Bot Name?}
+    Explicit -->|'AI Dost'| Dost[Assign AI Dost]
+    Explicit -->|'AI Sathi'| Sathi[Assign AI Sathi]
+    Explicit -->|Both sequentially| Dual[Schedule Dost then Sathi]
+    Explicit -->|None| AIRelevance{AI/Tech Topic?}
+    
+    AIRelevance -->|No: Casual chatter| Silence[No Response / Silent]
+    AIRelevance -->|Yes| ActiveCheck{Follow-up to active turn?}
+    
+    ActiveCheck -->|Yes| ContinueBot[Assign Last Active Bot]
+    ActiveCheck -->|No| RoundRobin[Round Robin / Balance Bot Selection]

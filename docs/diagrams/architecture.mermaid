@@ -1,0 +1,43 @@
+flowchart TD
+    subgraph Client ["Client Layer"]
+        UI["Next.js Web UI"]
+        Mic["Microphone Audio Stream"]
+        Speaker["Audio Output Stream"]
+        Chat["Text Chat Input"]
+    end
+
+    subgraph LK ["LiveKit Cluster"]
+        Room["LiveKit Media & Data Room"]
+    end
+
+    subgraph Server ["Python AI Backend"]
+        FastAPI["FastAPI Token & REST Server"]
+        AgentWorker["LiveKit Agent Worker"]
+
+        subgraph CorePipeline ["Core AI Pipeline"]
+            STT["STT Provider (Deepgram / Whisper)"]
+            Router["BotRouter Engine"]
+            TurnMgr["Turn Manager & ResponseLock"]
+            SharedCtx["Shared RoomContext"]
+            SpkMem["Speaker Memory Isolation"]
+            LLM["OpenAI LLM Engine"]
+            TTS["TTS Provider (ElevenLabs / OpenAI)"]
+        end
+
+        Dost["Bot 1: Roxstar AI Dost (Male)"]
+        Sathi["Bot 2: Roxstar AI Sathi (Female)"]
+    end
+
+    Mic -->|Audio Tracks| Room
+    Chat -->|Data Messages| Room
+    Room --> AgentWorker
+    AgentWorker --> STT
+    STT --> Router
+    Router --> TurnMgr
+    TurnMgr --> SharedCtx
+    SharedCtx --> SpkMem
+    SpkMem --> LLM
+    LLM -->|Dost / Sathi Persona| TTS
+    TTS -->|Published Audio Track| Room
+    Room --> Speaker
+    FastAPI -->|Token Gen / Rest fallback| UI

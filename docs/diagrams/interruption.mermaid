@@ -1,0 +1,15 @@
+sequenceDiagram
+    autonumber
+    actor User as User ( Rahul )
+    participant LK as LiveKit Room
+    participant Lock as Speaking Lock
+    participant Bot as Active Bot (Speaking)
+
+    Bot->>LK: Publishing Audio Stream ("Machine learning mein...")
+    Lock->>Lock: State: SPEAKING (Owner: roxstar-ai-dost)
+    User->>LK: Speaks ("Ruko, simple example se samjhao")
+    LK->>Lock: Audio VAD Interrupt Triggered
+    Lock->>Bot: Send AbortSignal / Cancel TTS Task
+    Bot->>LK: Stop Audio Track Publication
+    Lock->>Lock: Reset State: IDLE
+    Lock->>LK: Trigger Next Turn Processing

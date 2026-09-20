@@ -1,0 +1,23 @@
+sequenceDiagram
+    autonumber
+    actor User as Human Participant
+    participant LK as LiveKit Room
+    participant STT as STT Engine
+    participant Router as Bot Router
+    participant Turn as Turn Manager
+    participant LLM as OpenAI GPT-4o
+    participant TTS as TTS Engine
+
+    User->>LK: Spoken Voice / Text Chat
+    LK->>STT: Raw Audio Stream
+    STT-->>Router: Transcribed Text & Speaker Identity
+    Router->>Router: Evaluate Bot Selection & Intent
+    Router->>Turn: Acquire Lock (IDLE -> THINKING)
+    Turn-->>Router: Lock Granted
+    Router->>LLM: Prompt System & Conversation History
+    LLM-->>Router: Synthesized Response Text
+    Turn->>Turn: Update State (SPEAKING)
+    Router->>TTS: Stream Text to Audio
+    TTS-->>LK: Publish Audio Track
+    LK-->>User: Playback Audio & UI Update
+    Turn->>Turn: Release Lock (IDLE)
