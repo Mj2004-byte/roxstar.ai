@@ -20,8 +20,8 @@ This repository is pre-configured to deploy seamlessly to **Vercel** with Next.j
    | Variable | Value | Description |
    | :--- | :--- | :--- |
    | `LIVEKIT_URL` | `wss://roxstar-7sre7lmn.livekit.cloud` | Your LiveKit Cloud WebSockets URL |
-   | `LIVEKIT_API_KEY` | `APISxNhwyiErW9Z` | LiveKit API Key |
-   | `LIVEKIT_API_SECRET` | `your_livekit_api_secret` | LiveKit Secret Key |
+   | `LIVEKIT_API_KEY` | `APIb8MdCAAuc7Nv` | LiveKit API Key |
+   | `LIVEKIT_API_SECRET` | `jOxQriSIkXqSrQWkevVoILFYfPh9k6sP8nn5GeHY1fyB` | LiveKit Secret Key |
    | `GROQ_API_KEY` | `gsk_aiyUQq7q...` | Groq API Key for fast LLM |
    | `LLM_PROVIDER` | `groq` | LLM Provider |
    | `LLM_MODEL` | `groq/compound-mini` | Groq Model ID |
