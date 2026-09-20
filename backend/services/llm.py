@@ -1,12 +1,25 @@
 import time
 import asyncio
+import logging
 from typing import List, Dict, Any, Optional
 from backend.config import settings
 
+logger = logging.getLogger("RoxstarAI.LLM")
+
 class LLMService:
-    def __init__(self, model: Optional[str] = None):
+    GROQ_MODELS = [
+        "groq/compound-mini",
+        "groq/compound",
+        "qwen/qwen3.8-27b",
+        "llama-3.1-8b-instant",
+        "llama-3.3-70b-versatile"
+    ]
+
+    def __init__(self, provider: Optional[str] = None, model: Optional[str] = None):
+        self.provider = provider or settings.LLM_PROVIDER
         self.model = model or settings.LLM_MODEL
-        self.api_key = settings.OPENAI_API_KEY
+        self.groq_api_key = settings.GROQ_API_KEY
+        self.openai_api_key = settings.OPENAI_API_KEY
 
     async def generate_response(
         self,
@@ -27,12 +40,43 @@ class LLMService:
             messages.append({"role": role, "content": f"{msg.get('speaker_name', 'User')}: {msg.get('text', '')}"})
         messages.append({"role": "user", "content": user_message})
 
-        if self.api_key:
+        # 1. Groq API Provider (Ultra-low latency LLM)
+        if (self.provider == "groq" or self.groq_api_key) and self.groq_api_key:
+            import openai
+            client = openai.AsyncOpenAI(
+                api_key=self.groq_api_key,
+                base_url="https://api.groq.com/openai/v1"
+            )
+
+            # Try requested model first, then fallback Groq model list
+            candidate_models = [self.model] + [m for m in self.GROQ_MODELS if m != self.model]
+
+            for target_model in candidate_models:
+                try:
+                    response = await client.chat.completions.create(
+                        model=target_model,
+                        messages=messages,
+                        temperature=0.7,
+                        max_tokens=150
+                    )
+                    text = response.choices[0].message.content.strip()
+                    latency = time.time() - start_time
+                    logger.info(f"Groq API Response Generated ({target_model}) in {latency*1000:.0f}ms")
+                    return {
+                        "text": text,
+                        "latency_ms": int(latency * 1000),
+                        "model": f"groq:{target_model}"
+                    }
+                except Exception as e:
+                    logger.warning(f"Groq model {target_model} failed: {e}. Trying next model...")
+
+        # 2. OpenAI API Provider
+        if self.openai_api_key:
             try:
                 import openai
-                client = openai.AsyncOpenAI(api_key=self.api_key)
+                client = openai.AsyncOpenAI(api_key=self.openai_api_key)
                 response = await client.chat.completions.create(
-                    model=self.model,
+                    model=self.model if "gpt" in self.model else "gpt-4o",
                     messages=messages,
                     temperature=0.7,
                     max_tokens=150
@@ -45,11 +89,10 @@ class LLMService:
                     "model": self.model
                 }
             except Exception as e:
-                # Fallback on LLM API error
-                pass
+                logger.error(f"OpenAI API error: {e}. Falling back...")
 
-        # Fallback offline generator for testing without OpenAI key
-        await asyncio.sleep(0.2)
+        # 3. Fallback generator for offline testing
+        await asyncio.sleep(0.1)
         latency = time.time() - start_time
         fallback_text = self._get_fallback_response(user_message)
         return {

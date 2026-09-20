@@ -9,9 +9,11 @@ class Settings:
     LIVEKIT_API_KEY: str = os.getenv("LIVEKIT_API_KEY", "devkey")
     LIVEKIT_API_SECRET: str = os.getenv("LIVEKIT_API_SECRET", "secret")
 
-    # OpenAI Credentials & Models
+    # LLM Provider Credentials & Models
+    GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
-    LLM_MODEL: str = os.getenv("LLM_MODEL", "gpt-4o")
+    LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "groq" if os.getenv("GROQ_API_KEY") else "openai")
+    LLM_MODEL: str = os.getenv("LLM_MODEL", "groq/compound-mini" if os.getenv("GROQ_API_KEY") else "gpt-4o")
 
     # STT & TTS Providers
     STT_PROVIDER: str = os.getenv("STT_PROVIDER", "deepgram") # deepgram, whisper, mock
