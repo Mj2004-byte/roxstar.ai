@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ParticipantInfo, ChatMessage, LatencyMetrics } from '../types';
 import { ParticipantsPanel } from './ParticipantsPanel';
 import { TranscriptPanel } from './TranscriptPanel';
@@ -30,6 +30,7 @@ export const Room: React.FC<RoomProps> = ({ roomId, userIdentity, userName, onLe
   const [currentSpeakerName, setCurrentSpeakerName] = useState<string | undefined>(undefined);
   const [connectionState, setConnectionState] = useState('connected');
   const [isSending, setIsSending] = useState(false);
+  const recognitionRef = useRef<any>(null);
 
   const [metrics, setMetrics] = useState<LatencyMetrics>({
     stt_ms: 380,
@@ -54,15 +55,30 @@ export const Room: React.FC<RoomProps> = ({ roomId, userIdentity, userName, onLe
 
         // Sync full participants roster across all joined users
         if (state.participants) {
-          const participantList: ParticipantInfo[] = Object.values(state.participants).map((p: any) => ({
-            identity: p.identity,
-            name: p.display_name || p.identity,
-            role: p.role === 'bot' ? 'bot' : 'human',
-            isSpeaking: state.current_speaker === p.identity,
-            isMuted: false,
-            joinedAt: p.joined_at || Date.now()
-          }));
-          setParticipants(participantList);
+          const participantMap = new Map<string, ParticipantInfo>();
+          
+          // Always ensure local user is in roster
+          participantMap.set(userIdentity, {
+            identity: userIdentity,
+            name: userName,
+            role: 'human',
+            isSpeaking: currentSpeaker === userIdentity,
+            isMuted: isMuted,
+            joinedAt: Date.now()
+          });
+
+          Object.values(state.participants).forEach((p: any) => {
+            participantMap.set(p.identity, {
+              identity: p.identity,
+              name: p.display_name || p.identity,
+              role: (p.role === 'bot' || p.identity.startsWith('roxstar-ai')) ? 'bot' : 'human',
+              isSpeaking: state.current_speaker === p.identity,
+              isMuted: false,
+              joinedAt: p.joined_at || Date.now()
+            });
+          });
+
+          setParticipants(Array.from(participantMap.values()));
         }
 
         // Sync shared conversation transcript history
@@ -71,7 +87,7 @@ export const Room: React.FC<RoomProps> = ({ roomId, userIdentity, userName, onLe
             id: msg.id,
             speakerId: msg.speaker_id,
             speakerName: msg.speaker_name,
-            speakerRole: msg.speaker_role === 'bot' ? 'bot' : 'human',
+            speakerRole: (msg.speaker_role === 'bot' || msg.speaker_id.startsWith('roxstar-ai')) ? 'bot' : 'human',
             text: msg.text,
             timestamp: msg.timestamp,
           }));
@@ -82,7 +98,76 @@ export const Room: React.FC<RoomProps> = ({ roomId, userIdentity, userName, onLe
       }
     }, 1500);
     return () => clearInterval(interval);
-  }, [roomId]);
+  }, [roomId, userIdentity, userName, isMuted, currentSpeaker]);
+
+  // Real-time Microphone Speech Recognition (WebSpeech API)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+
+    if (!isMuted) {
+      try {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = false;
+        recognition.lang = 'hi-IN'; // Hindi / Hinglish recognition
+
+        recognition.onresult = (event: any) => {
+          const lastIndex = event.results.length - 1;
+          const transcript = event.results[lastIndex][0].transcript.trim();
+          if (transcript) {
+            handleSendMessage(transcript);
+          }
+        };
+
+        recognition.onerror = (e: any) => {
+          // Restart on timeout or non-fatal errors
+        };
+
+        recognition.start();
+        recognitionRef.current = recognition;
+      } catch (e) {
+        console.error('Speech recognition error:', e);
+      }
+    } else if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      recognitionRef.current = null;
+    }
+
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+        recognitionRef.current = null;
+      }
+    };
+  }, [isMuted]);
+
+  // Speak Out Bot Response Audio via SpeechSynthesis / Audio Playback
+  const speakBotResponse = (text: string, botId: string) => {
+    if (!isSpeakerOn || typeof window === 'undefined') return;
+
+    // Stop active speech if any
+    window.speechSynthesis?.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'hi-IN';
+    utterance.pitch = botId.includes('sathi') ? 1.2 : 0.9; // Higher pitch for female Sathi, lower for male Dost
+    utterance.rate = 1.0;
+
+    utterance.onstart = () => {
+      setCurrentSpeaker(botId);
+      setCurrentSpeakerName(botId.includes('dost') ? 'Roxstar AI Dost' : 'Roxstar AI Sathi');
+    };
+
+    utterance.onend = () => {
+      setCurrentSpeaker(undefined);
+      setCurrentSpeakerName(undefined);
+    };
+
+    window.speechSynthesis?.speak(utterance);
+  };
 
   const handleSendMessage = async (text: string) => {
     setIsSending(true);
@@ -121,6 +206,9 @@ export const Room: React.FC<RoomProps> = ({ roomId, userIdentity, userName, onLe
               lastUpdatedBot: resp.bot_name,
             });
           }
+
+          // Speak response out of speaker
+          speakBotResponse(resp.text, resp.bot_id);
         });
       }
     } catch (err) {
@@ -132,6 +220,7 @@ export const Room: React.FC<RoomProps> = ({ roomId, userIdentity, userName, onLe
 
   const handleLeaveRoom = async () => {
     try {
+      window.speechSynthesis?.cancel();
       await resetRoomState(roomId);
     } catch (e) {}
     onLeave();
@@ -139,12 +228,14 @@ export const Room: React.FC<RoomProps> = ({ roomId, userIdentity, userName, onLe
 
   const handleResetChat = async () => {
     try {
+      window.speechSynthesis?.cancel();
       await resetRoomState(roomId);
       setMessages([]);
     } catch (e) {}
   };
 
-  const humanParticipants = participants.filter((p) => p.role === 'human' || (!p.role && !p.identity.startsWith('roxstar-ai')));
+  // Extract all human participants currently joined in room
+  const humanParticipants = participants.filter((p) => p.role !== 'bot' && !p.identity.startsWith('roxstar-ai'));
   const humanNames = humanParticipants.map((p) => p.name).join(', ') || userName;
 
   return (
@@ -180,7 +271,6 @@ export const Room: React.FC<RoomProps> = ({ roomId, userIdentity, userName, onLe
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4 flex-1 min-h-0">
         {/* Left Column: Audio Visualizer Spectrum + Participants Panel */}
         <div className="md:col-span-4 lg:col-span-4 flex flex-col gap-4 h-full min-h-0">
-          {/* Equalizer Spectrum Card (Inspired by Image 1) */}
           <AudioVisualizer
             currentSpeakerName={currentSpeakerName}
             isSpeaking={!!currentSpeaker}

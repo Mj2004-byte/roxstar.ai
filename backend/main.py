@@ -125,6 +125,10 @@ async def process_chat(req: ChatRequest):
     """Processes user text chat or transcribed voice turn through BotRouter & Agents."""
     context, turn_mgr, router = get_or_create_room_components(req.room_id)
 
+    # Ensure human participant is registered in room context
+    if not req.speaker_id.startswith("roxstar-ai"):
+        context.add_participant(req.speaker_id, req.speaker_name, role="human")
+
     # Check for barge-in / interruption if bot is currently speaking
     if turn_mgr.state in ["THINKING", "SPEAKING"]:
         interrupted = await turn_mgr.handle_interruption(req.speaker_id)
@@ -159,10 +163,18 @@ async def process_chat(req: ChatRequest):
         if bot_id == "roxstar-ai-dost":
             resp = await dost_agent.process_turn(req.speaker_id, req.speaker_name, req.text, context)
             if resp:
+                import base64
+                if isinstance(resp.get("audio_bytes"), bytes):
+                    resp["audio_base64"] = base64.b64encode(resp["audio_bytes"]).decode("utf-8")
+                    del resp["audio_bytes"]
                 responses.append(resp)
         elif bot_id == "roxstar-ai-sathi":
             resp = await sathi_agent.process_turn(req.speaker_id, req.speaker_name, req.text, context)
             if resp:
+                import base64
+                if isinstance(resp.get("audio_bytes"), bytes):
+                    resp["audio_base64"] = base64.b64encode(resp["audio_bytes"]).decode("utf-8")
+                    del resp["audio_bytes"]
                 responses.append(resp)
 
     return {
