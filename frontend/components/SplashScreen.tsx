@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Logo } from './Logo';
-import { Mic, Heart, Play, Sparkles, Volume2 } from 'lucide-react';
+import { Mic, Heart, Play, Sparkles } from 'lucide-react';
 
 interface SplashScreenProps {
   onEnter: () => void;
@@ -8,9 +8,26 @@ interface SplashScreenProps {
 
 export const SplashScreen: React.FC<SplashScreenProps> = ({ onEnter }) => {
   const [liked, setLiked] = useState(false);
+  const [countdown, setCountdown] = useState(3);
   const [equalizerHeights, setEqualizerHeights] = useState<number[]>([
     40, 70, 90, 60, 85, 50, 95, 75, 60, 80, 90, 65, 85, 45, 70, 90, 55, 80
   ]);
+
+  // Automatic transition after 3 seconds max
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onEnter();
+    }, 3000);
+
+    const countdownInterval = setInterval(() => {
+      setCountdown((prev) => (prev > 1 ? prev - 1 : 1));
+    }, 1000);
+
+    return () => {
+      clearTimeout(timer);
+      clearInterval(countdownInterval);
+    };
+  }, [onEnter]);
 
   // Animate equalizer bars dynamically like Image 1
   useEffect(() => {
@@ -18,7 +35,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onEnter }) => {
       setEqualizerHeights(
         Array.from({ length: 18 }, () => Math.floor(Math.random() * 65) + 30)
       );
-    }, 150);
+    }, 120);
     return () => clearInterval(interval);
   }, []);
 
@@ -33,7 +50,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onEnter }) => {
         <Logo size="md" />
         <span className="bg-pink-500/10 text-pink-400 border border-pink-500/30 text-xs px-3 py-1 rounded-full font-mono font-medium flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-pink-500 animate-ping" />
-          Ready
+          Auto-launching in {countdown}s
         </span>
       </div>
 
@@ -61,19 +78,19 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onEnter }) => {
           </p>
         </div>
 
-        {/* Progress Bar (Image 1 Style) */}
+        {/* Progress Bar (3-second animated progress) */}
         <div className="w-full space-y-1.5 pt-2">
           <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
-            <div className="h-full w-2/3 bg-gradient-to-r from-pink-600 to-pink-400 rounded-full animate-pulse" />
+            <div className="h-full bg-gradient-to-r from-pink-600 to-pink-400 rounded-full animate-[progress_3s_linear]" style={{ animation: 'progress 3s linear forwards' }} />
           </div>
           <div className="flex justify-between text-[10px] text-pink-300/60 font-mono">
-            <span>00:15</span>
-            <span>Live Voice AI</span>
+            <span>00:0{3 - countdown}</span>
+            <span>00:03</span>
           </div>
         </div>
 
         {/* Interactive Controls (Image 1 Style: Heart, Large Pink Mic Button, Play) */}
-        <div className="flex items-center justify-center gap-8 pt-4 w-full">
+        <div className="flex items-center justify-center gap-8 pt-2 w-full">
           <button
             onClick={() => setLiked(!liked)}
             className={`p-3 rounded-full transition-all ${
@@ -100,8 +117,8 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onEnter }) => {
           </button>
         </div>
 
-        <p className="text-[11px] text-pink-200/70 font-sans text-center pt-2">
-          Click the <strong className="text-pink-400">Mic Button</strong> to enter the live voice room
+        <p className="text-[11px] text-pink-200/70 font-sans text-center pt-1 font-mono">
+          Auto-entering in <strong className="text-pink-400">{countdown}s</strong> or click mic button
         </p>
       </div>
 
@@ -111,7 +128,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onEnter }) => {
         <span>•</span>
         <span>Speaker Memory</span>
         <span>•</span>
-        <span>Barge-in Support</span>
+        <span>Barge-in</span>
       </div>
     </div>
   );

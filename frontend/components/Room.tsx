@@ -144,17 +144,20 @@ export const Room: React.FC<RoomProps> = ({ roomId, userIdentity, userName, onLe
     } catch (e) {}
   };
 
+  const humanParticipants = participants.filter((p) => p.role === 'human' || (!p.role && !p.identity.startsWith('roxstar-ai')));
+  const humanNames = humanParticipants.map((p) => p.name).join(', ') || userName;
+
   return (
     <div className="flex flex-col h-screen max-h-screen bg-[#0e0b16] text-white p-4 gap-4 font-sans overflow-hidden">
-      {/* Header Bar with Logo and Prominent Participant Name */}
+      {/* Header Bar with Logo and Prominent Joined Human Participant Names */}
       <header className="flex items-center justify-between bg-[#160d2b]/90 border border-pink-500/20 rounded-2xl px-5 py-3 shadow-xl shrink-0">
         <Logo size="md" />
 
         <div className="flex items-center gap-3">
           <div className="bg-gradient-to-r from-pink-500/20 to-purple-500/20 border border-pink-500/40 rounded-xl px-3.5 py-1.5 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-pink-400 animate-pulse" />
-            <span className="text-xs text-pink-200 font-medium">Participant:</span>
-            <span className="text-sm font-black text-white tracking-wide">{userName}</span>
+            <span className="text-xs text-pink-200 font-medium">Humans Joined ({humanParticipants.length}):</span>
+            <span className="text-sm font-black text-white tracking-wide">{humanNames}</span>
           </div>
 
           <span className="hidden md:inline text-xs text-pink-300/80 font-mono bg-purple-950/60 px-3 py-1 rounded-lg border border-purple-800/40">
