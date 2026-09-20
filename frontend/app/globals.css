@@ -4,16 +4,37 @@
 
 :root {
   --foreground-rgb: 255, 255, 255;
-  --background-start-rgb: 10, 15, 26;
-  --background-end-rgb: 2, 6, 23;
+  --background-start-rgb: 14, 11, 22;
+  --background-end-rgb: 22, 13, 41;
 }
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  background: radial-gradient(circle at top center, #211242 0%, #0e0b16 70%, #08060f 100%);
+  min-height: 100vh;
+}
+
+/* Glowing Neon Pink Elements */
+.neon-glow-pink {
+  box-shadow: 0 0 25px rgba(255, 42, 112, 0.5), 0 0 50px rgba(255, 42, 112, 0.2);
+}
+
+.neon-text-pink {
+  text-shadow: 0 0 10px rgba(255, 42, 112, 0.7), 0 0 20px rgba(255, 42, 112, 0.4);
+}
+
+.neon-border-pink {
+  border-color: rgba(255, 42, 112, 0.6);
+  box-shadow: 0 0 15px rgba(255, 42, 112, 0.3);
+}
+
+/* Glassmorphism Card Style */
+.glass-panel {
+  background: rgba(26, 16, 47, 0.75);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 42, 112, 0.2);
+}
+
+.glass-panel:hover {
+  border-color: rgba(255, 42, 112, 0.4);
 }

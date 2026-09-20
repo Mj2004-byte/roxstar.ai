@@ -17,17 +17,17 @@ export const ControlBar: React.FC<ControlBarProps> = ({
   onLeaveRoom,
 }) => {
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-3 shadow-lg flex items-center justify-between">
+    <div className="bg-[#160d2b]/90 border border-pink-500/20 rounded-xl p-3 shadow-xl flex items-center justify-between">
       <div className="flex items-center gap-3">
         <button
           onClick={onToggleMute}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm transition-all ${
             isMuted
               ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-              : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700'
+              : 'bg-gradient-to-r from-pink-600 to-rose-500 text-white shadow-md shadow-pink-600/30'
           }`}
         >
-          {isMuted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4 text-emerald-400" />}
+          {isMuted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
           <span>{isMuted ? 'Mic Muted' : 'Mic Active'}</span>
         </button>
 
@@ -36,10 +36,10 @@ export const ControlBar: React.FC<ControlBarProps> = ({
           className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm transition-all ${
             !isSpeakerOn
               ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-              : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700'
+              : 'bg-[#221442] hover:bg-[#2b1954] text-pink-200 border border-purple-800/60'
           }`}
         >
-          {!isSpeakerOn ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4 text-blue-400" />}
+          {!isSpeakerOn ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4 text-pink-400" />}
           <span>{isSpeakerOn ? 'Speaker On' : 'Muted Audio'}</span>
         </button>
       </div>

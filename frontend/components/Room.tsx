@@ -5,6 +5,8 @@ import { TranscriptPanel } from './TranscriptPanel';
 import { ChatInput } from './ChatInput';
 import { ControlBar } from './ControlBar';
 import { MetricsOverlay } from './MetricsOverlay';
+import { AudioVisualizer } from './AudioVisualizer';
+import { Logo } from './Logo';
 import { sendChatMessage, fetchRoomState } from '../lib/livekit';
 
 interface RoomProps {
@@ -25,14 +27,15 @@ export const Room: React.FC<RoomProps> = ({ roomId, userIdentity, userName, onLe
   const [isMuted, setIsMuted] = useState(false);
   const [isSpeakerOn, setIsSpeakerOn] = useState(true);
   const [currentSpeaker, setCurrentSpeaker] = useState<string | undefined>(undefined);
+  const [currentSpeakerName, setCurrentSpeakerName] = useState<string | undefined>(undefined);
   const [connectionState, setConnectionState] = useState('connected');
   const [isSending, setIsSending] = useState(false);
 
   const [metrics, setMetrics] = useState<LatencyMetrics>({
     stt_ms: 380,
-    llm_ms: 650,
-    tts_ms: 720,
-    total_ms: 1750,
+    llm_ms: 300,
+    tts_ms: 155,
+    total_ms: 835,
   });
 
   // Polling room state periodically for live multi-user sync
@@ -42,8 +45,11 @@ export const Room: React.FC<RoomProps> = ({ roomId, userIdentity, userName, onLe
         const state = await fetchRoomState(roomId);
         if (state.current_speaker) {
           setCurrentSpeaker(state.current_speaker);
+          const activeParticipant = state.participants?.[state.current_speaker];
+          setCurrentSpeakerName(activeParticipant?.display_name || state.current_speaker);
         } else {
           setCurrentSpeaker(undefined);
+          setCurrentSpeakerName(undefined);
         }
 
         // Sync full participants roster across all joined users
@@ -108,10 +114,10 @@ export const Room: React.FC<RoomProps> = ({ roomId, userIdentity, userName, onLe
 
           if (resp.metrics) {
             setMetrics({
-              stt_ms: 410,
-              llm_ms: resp.metrics.llm_ms || 650,
-              tts_ms: resp.metrics.tts_ms || 720,
-              total_ms: resp.metrics.total_ms || 1780,
+              stt_ms: 380,
+              llm_ms: resp.metrics.llm_ms || 300,
+              tts_ms: resp.metrics.tts_ms || 155,
+              total_ms: resp.metrics.total_ms || 835,
               lastUpdatedBot: resp.bot_name,
             });
           }
@@ -125,17 +131,15 @@ export const Room: React.FC<RoomProps> = ({ roomId, userIdentity, userName, onLe
   };
 
   return (
-    <div className="flex flex-col h-screen max-h-screen bg-slate-950 text-slate-100 p-4 gap-4 font-sans overflow-hidden">
-      {/* Header Bar */}
-      <header className="flex items-center justify-between bg-slate-900 border border-slate-800 rounded-xl px-5 py-3 shadow-lg shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center font-bold text-white text-sm">
-            R
-          </div>
-          <div>
-            <h1 className="font-bold text-base text-slate-100 tracking-wide">Roxstar AI Voice Room</h1>
-            <p className="text-xs text-slate-400">Room ID: <span className="font-mono text-blue-400">{roomId}</span></p>
-          </div>
+    <div className="flex flex-col h-screen max-h-screen bg-[#0e0b16] text-white p-4 gap-4 font-sans overflow-hidden">
+      {/* Header Bar with Logo */}
+      <header className="flex items-center justify-between bg-[#160d2b]/90 border border-pink-500/20 rounded-2xl px-5 py-3 shadow-xl shrink-0">
+        <Logo size="md" />
+
+        <div className="hidden sm:flex items-center gap-2">
+          <span className="text-xs text-pink-300 font-mono">
+            Room: <strong className="text-white">{roomId}</strong>
+          </span>
         </div>
 
         <MetricsOverlay metrics={metrics} connectionState={connectionState} />
@@ -143,13 +147,22 @@ export const Room: React.FC<RoomProps> = ({ roomId, userIdentity, userName, onLe
 
       {/* Main Grid Layout */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4 flex-1 min-h-0">
-        {/* Left Column: Participants Panel */}
-        <div className="md:col-span-4 lg:col-span-3 h-full min-h-0">
-          <ParticipantsPanel participants={participants} currentSpeaker={currentSpeaker} />
+        {/* Left Column: Audio Visualizer Spectrum + Participants Panel */}
+        <div className="md:col-span-4 lg:col-span-4 flex flex-col gap-4 h-full min-h-0">
+          {/* Equalizer Spectrum Card (Inspired by Image 1) */}
+          <AudioVisualizer
+            currentSpeakerName={currentSpeakerName}
+            isSpeaking={!!currentSpeaker}
+            isMuted={isMuted}
+            onToggleMute={() => setIsMuted(!isMuted)}
+          />
+          <div className="flex-1 min-h-0">
+            <ParticipantsPanel participants={participants} currentSpeaker={currentSpeaker} />
+          </div>
         </div>
 
-        {/* Right Column: Transcript Panel & Controls */}
-        <div className="md:col-span-8 lg:col-span-9 flex flex-col h-full gap-4 min-h-0">
+        {/* Right Column: Transcript Panel & Chat Input */}
+        <div className="md:col-span-8 lg:col-span-8 flex flex-col h-full gap-4 min-h-0">
           <div className="flex-1 min-h-0">
             <TranscriptPanel messages={messages} />
           </div>
