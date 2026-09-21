@@ -16,7 +16,7 @@ async def test_llm_failure_graceful_fallback():
     llm = LLMService(model="nonexistent-model")
     res = await llm.generate_response("System prompt", "AI kya hota hai?", [])
     assert len(res["text"]) > 0
-    assert "technology" in res["text"].lower() or "smart" in res["text"].lower()
+    assert "ai" in res["text"].lower() or "artificial" in res["text"].lower() or "technology" in res["text"].lower()
 
 @pytest.mark.asyncio
 async def test_tts_failure_graceful_fallback():

@@ -9,11 +9,9 @@ logger = logging.getLogger("RoxstarAI.LLM")
 
 class LLMService:
     GROQ_MODELS = [
-        "groq/compound-mini",
         "groq/compound",
-        "qwen/qwen3.8-27b",
-        "llama-3.1-8b-instant",
-        "llama-3.3-70b-versatile"
+        "groq/compound-mini",
+        "qwen/qwen3.8-27b"
     ]
 
     def __init__(self, provider: Optional[str] = None, model: Optional[str] = None):
@@ -36,7 +34,8 @@ class LLMService:
             augmented_system_prompt += f"\n\n[SPEAKER MEMORY CONTEXT]:\n{speaker_memory_summary}"
 
         messages = [{"role": "system", "content": augmented_system_prompt}]
-        for msg in conversation_history:
+        # Limit history to last 5 items to ensure fast response & no payload errors
+        for msg in conversation_history[-5:]:
             role = "assistant" if msg.get("speaker_role") == "bot" else "user"
             messages.append({"role": role, "content": f"{msg.get('speaker_name', 'User')}: {msg.get('text', '')}"})
         messages.append({"role": "user", "content": user_message})

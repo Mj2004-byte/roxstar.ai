@@ -98,7 +98,7 @@ export const Room: React.FC<RoomProps> = ({ roomId, userIdentity, userName, onLe
       }
     }, 1500);
     return () => clearInterval(interval);
-  }, [roomId, userIdentity, userName, isMuted, currentSpeaker]);
+  }, [roomId, userIdentity, userName]);
 
   // Real-time Microphone Speech Recognition (WebSpeech API)
   useEffect(() => {
@@ -106,6 +106,8 @@ export const Room: React.FC<RoomProps> = ({ roomId, userIdentity, userName, onLe
 
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) return;
+
+    let isComponentMounted = true;
 
     if (!isMuted) {
       try {
@@ -123,7 +125,15 @@ export const Room: React.FC<RoomProps> = ({ roomId, userIdentity, userName, onLe
         };
 
         recognition.onerror = (e: any) => {
-          // Restart on timeout or non-fatal errors
+          // Restart on non-aborted errors if mic should be active
+        };
+
+        recognition.onend = () => {
+          if (isComponentMounted && !isMuted && recognitionRef.current) {
+            try {
+              recognition.start();
+            } catch (e) {}
+          }
         };
 
         recognition.start();
@@ -137,6 +147,7 @@ export const Room: React.FC<RoomProps> = ({ roomId, userIdentity, userName, onLe
     }
 
     return () => {
+      isComponentMounted = false;
       if (recognitionRef.current) {
         recognitionRef.current.stop();
         recognitionRef.current = null;
@@ -145,15 +156,37 @@ export const Room: React.FC<RoomProps> = ({ roomId, userIdentity, userName, onLe
   }, [isMuted]);
 
   // Speak Out Bot Response Audio via SpeechSynthesis / Audio Playback
-  const speakBotResponse = (text: string, botId: string) => {
+  const speakBotResponse = (text: string, botId: string, audioBase64?: string) => {
     if (!isSpeakerOn || typeof window === 'undefined') return;
 
-    // Stop active speech if any
+    if (audioBase64) {
+      try {
+        const audio = new Audio(`data:audio/mp3;base64,${audioBase64}`);
+        audio.onplay = () => {
+          setCurrentSpeaker(botId);
+          setCurrentSpeakerName(botId.includes('dost') ? 'Roxstar AI Dost' : 'Roxstar AI Sathi');
+        };
+        audio.onended = () => {
+          setCurrentSpeaker(undefined);
+          setCurrentSpeakerName(undefined);
+        };
+        audio.play().catch(() => {
+          // Fallback to SpeechSynthesis if audio play fails
+          fallbackSpeechSynthesis(text, botId);
+        });
+        return;
+      } catch (e) {}
+    }
+
+    fallbackSpeechSynthesis(text, botId);
+  };
+
+  const fallbackSpeechSynthesis = (text: string, botId: string) => {
     window.speechSynthesis?.cancel();
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'hi-IN';
-    utterance.pitch = botId.includes('sathi') ? 1.2 : 0.9; // Higher pitch for female Sathi, lower for male Dost
+    utterance.pitch = botId.includes('sathi') ? 1.2 : 0.9;
     utterance.rate = 1.0;
 
     utterance.onstart = () => {
@@ -208,7 +241,7 @@ export const Room: React.FC<RoomProps> = ({ roomId, userIdentity, userName, onLe
           }
 
           // Speak response out of speaker
-          speakBotResponse(resp.text, resp.bot_id);
+          speakBotResponse(resp.text, resp.bot_id, resp.audio_base64);
         });
       }
     } catch (err) {
