@@ -318,7 +318,7 @@ export const Room: React.FC<RoomProps> = ({ roomId, userIdentity, userName, onLe
         {/* Right Column: Transcript Panel & Chat Input */}
         <div className="md:col-span-8 lg:col-span-8 flex flex-col h-full gap-4 min-h-0">
           <div className="flex-1 min-h-0">
-            <TranscriptPanel messages={messages} />
+            <TranscriptPanel messages={messages} isSending={isSending} />
           </div>
 
           <div className="shrink-0 space-y-3">

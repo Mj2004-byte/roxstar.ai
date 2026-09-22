@@ -4,14 +4,15 @@ import { Bot, User, Clock, Zap } from 'lucide-react';
 
 interface TranscriptPanelProps {
   messages: ChatMessage[];
+  isSending?: boolean;
 }
 
-export const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ messages }) => {
+export const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ messages, isSending }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [messages, isSending]);
 
   return (
     <div className="bg-[#140d28]/90 backdrop-blur-md border border-[#2d1b50] rounded-2xl p-4 flex flex-col h-full shadow-2xl">
@@ -26,7 +27,7 @@ export const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ messages }) =>
       </div>
 
       <div className="flex-1 overflow-y-auto space-y-3 pr-1.5">
-        {messages.length === 0 ? (
+        {messages.length === 0 && !isSending ? (
           <div className="h-full flex flex-col items-center justify-center text-slate-400 text-xs space-y-2 py-8">
             <Bot className="w-7 h-7 text-pink-500/40" />
             <p className="text-slate-400 font-medium">Room conversation is empty.</p>
@@ -106,6 +107,18 @@ export const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ messages }) =>
               </div>
             );
           })
+        )}
+
+        {isSending && (
+          <div className="flex gap-3 p-3.5 rounded-xl border bg-[#1e133d]/70 border-pink-500/30 text-slate-300 animate-pulse">
+            <div className="w-8 h-8 rounded-xl bg-pink-600 text-white flex items-center justify-center text-xs font-bold shrink-0">
+              <Bot className="w-4 h-4" />
+            </div>
+            <div className="flex items-center gap-2 text-xs font-mono text-pink-300">
+              <span className="w-2 h-2 rounded-full bg-pink-400 animate-bounce" />
+              <span>Roxstar AI is thinking & generating speech...</span>
+            </div>
+          </div>
         )}
         <div ref={messagesEndRef} />
       </div>
